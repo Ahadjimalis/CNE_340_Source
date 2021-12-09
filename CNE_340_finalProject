@@ -1,0 +1,29 @@
+#Albert Hadjimalis
+#CNE240 Group Project
+
+import pandas
+from sqlalchemy import create_engine
+
+hostname="localhost"
+uname="root"
+pwd=""
+dbname="group_final"
+
+engine = create_engine("mysql+pymysql://{user}:{pw}@{host}/{db}"
+                       .format(host=hostname, db=dbname, user=uname, pw=pwd))
+
+tables = pandas.read_excel ('https://www.ers.usda.gov/webdocs/DataFiles/47649/alltables.xls' , sheet_name = 'Cotton',
+                                    header = 2, index_col = 'State')
+tables.rename(columns = {"2003"
+                         :'2021'}, inplace=True)
+
+connection=engine.connect()
+tables.to_sql('group_final', con = engine, if_exists= 'append')
+
+
+engine.execute('CREATE TABLE group_final_Temp Like group_final')
+engine.execute('INSERT INTO group_final_Temp SELECT DISTINCT (State), 2021 FROM group_final')
+engine.execute('DROP TABLE group_final')
+engine.execute('ALTER TABLE group_final_Temp RENAME to group_final')
+
+connection.close()
